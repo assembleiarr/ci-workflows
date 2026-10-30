@@ -1,0 +1,29 @@
+# Formato dos arquivos de texto (app-catalog docs/padroes/ci-devsecops.md), a partir do
+# .editorconfig do al-rr/provision-template. Se o repo já tem um .editorconfig, junte os dois:
+# charset, end_of_line, insert_final_newline e trim_trailing_whitespace são obrigatórios; a
+# indentação segue a stack (o Laravel usa 4 espaços em PHP).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+[*.sh]
+indent_size = 2
+
+# Cópia do al-rr/platform-modules, que indenta com tab: mantida igual à origem para o diff
+# entre as duas ficar limpo.
+[scripts/check_exec_bit.sh]
+indent_style = tab
+
+# A indentação do Markdown (continuação de listas numeradas) fica com o markdownlint.
+[*.md]
+indent_style = unset
+indent_size = unset

@@ -1,0 +1,106 @@
+# Verificações de repositório (assembleiarr/app-catalog docs/padroes/ci-devsecops.md), a partir de
+# templates/app/.pre-commit-config.yaml do app-catalog, com os blocos dos gatilhos deste repo:
+# todo repo, *.md, *.sh, *.yaml e .github/workflows/. O job `higiene` do CI roda esta mesma config:
+#   pre-commit run --all-files --show-diff-on-failure
+#
+# Instalação, uma vez por clone: pre-commit install
+# Os hooks em container (ShellCheck, lychee) precisam do Docker/Colima rodando.
+# Os hooks deste repo rodam como `repo: local`, direto dos scripts da árvore de trabalho: assim
+# cada mudança neles é verificada por ela mesma, sem esperar uma tag nova.
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+minimum_pre_commit_version: "3.2.0"
+
+repos:
+  # --- Todo repo -----------------------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.11.1
+    hooks:
+      - id: editorconfig-checker
+        alias: ec
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.5.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, refactor, test, docs, ci, build, chore]
+
+  # Os mesmos hooks do .pre-commit-hooks.yaml, rodando da árvore de trabalho.
+  - repo: local
+    hooks:
+      - id: sem-env
+        name: sem .env versionado
+        language: fail
+        entry: ".env não entra no git, só o .env.example. Tire o arquivo do commit com git rm --cached"
+        files: (^|/)\.env(\..+)?$
+        exclude: (^|/)\.env\.example$
+        types: []
+      - id: check-exec-bit
+        name: bit executável dos scripts shell
+        language: script
+        entry: scripts/check_exec_bit.sh
+        pass_filenames: false
+        always_run: true
+      - id: check-shdoc
+        name: cabeçalho shdoc dos entrypoints
+        language: script
+        entry: scripts/check_shdoc.sh
+        types: [shell]
+
+  # --- *.md ----------------------------------------------------------------------------------
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.3
+    hooks:
+      - id: markdownlint-cli2
+
+  - repo: local
+    hooks:
+      - id: lychee
+        name: links relativos (lychee --offline)
+        language: docker_image
+        entry: lycheeverse/lychee:0.24.2 --offline --no-progress --include-fragments
+        types: [markdown]
+
+  # --- *.sh ----------------------------------------------------------------------------------
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+        args: [-x]
+
+  - repo: local
+    hooks:
+      - id: shell-syntax
+        name: sintaxe do shell (sh -n / bash -n, pelo shebang)
+        language: system
+        entry: sh -c 'rc=0; for f in "$@"; do case "$(head -n 1 "$f")" in *bash*) bash -n "$f" || rc=1 ;; *) sh -n "$f" || rc=1 ;; esac; done; exit "$rc"' --
+        types: [shell]
+
+  # --- *.yaml, *.yml -------------------------------------------------------------------------
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [--strict]
+
+  # --- .github/workflows/ --------------------------------------------------------------------
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint

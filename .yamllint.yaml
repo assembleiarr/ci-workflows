@@ -1,0 +1,12 @@
+# Configuração do yamllint (app-catalog docs/padroes/ci-devsecops.md).
+extends: default
+
+rules:
+  # Arquivos de Compose e workflows não começam com "---".
+  document-start: disable
+  # Linhas longas são comuns em comandos de workflow; o limite fica alto.
+  line-length:
+    max: 160
+  # "on:" dos workflows do GitHub Actions é chave, não booleano.
+  truthy:
+    check-keys: false

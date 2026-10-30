@@ -1,0 +1,27 @@
+# Hooks compartilhados das verificações de repositório
+# (assembleiarr/app-catalog docs/padroes/ci-devsecops.md).
+
+- id: sem-env
+  name: sem .env versionado
+  description: Barra .env e .env.* no commit; só o .env.example entra no git.
+  language: fail
+  entry: ".env não entra no git, só o .env.example. Tire o arquivo do commit com git rm --cached"
+  files: (^|/)\.env(\..+)?$
+  exclude: (^|/)\.env\.example$
+  # Sem filtro de tipo: o padrão (types: [file]) deixaria passar um .env versionado como link.
+  types: []
+
+- id: check-exec-bit
+  name: bit executável dos scripts shell
+  description: Entrypoint 100755 com shebang; biblioteca carregada com source 100644. Varre o repo inteiro.
+  language: script
+  entry: scripts/check_exec_bit.sh
+  pass_filenames: false
+  always_run: true
+
+- id: check-shdoc
+  name: cabeçalho shdoc dos entrypoints
+  description: Confere @file, @brief, @description e @example nos scripts 100755.
+  language: script
+  entry: scripts/check_shdoc.sh
+  types: [shell]
