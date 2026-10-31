@@ -1,8 +1,18 @@
 # ci-workflows
 
 Hooks compartilhados do [pre-commit](https://pre-commit.com/) para as verificações de repositório
-dos apps da org `assembleiarr`. As regras de cada verificação ficam no `assembleiarr/app-catalog`,
-em `docs/padroes/ci-devsecops.md` e `docs/padroes/scripts-shell.md`.
+dos repos das orgs `assembleiarr` (apps) e `al-rr` (infra). Este README é o contrato de cada hook:
+o que verifica, que arquivos lê e o que precisa para rodar. Quais hooks cada repo liga, e como o CI
+os roda, fica no padrão da org:
+
+| Org | Fonte normativa |
+| --- | --- |
+| `assembleiarr` | `assembleiarr/app-catalog`: `docs/padroes/ci-devsecops.md` e `docs/padroes/scripts-shell.md` |
+| `al-rr` | `ednillibanio/platform-catalog`: `docs/standards/pre-commit-standard.md` (ADR-0006) |
+
+> **Nada interno.** O repo é público: o pre-commit e o CI dos dois lados clonam ele sem credencial.
+> Nada aqui pode ter segredo, configuração de ambiente, nome de servidor, endereço ou caminho
+> interno. Uma verificação que precise desses dados fica como hook `repo: local` no repo que a usa.
 
 ## Hooks
 
@@ -22,13 +32,29 @@ espaço não entra nessa lista; renomeie o arquivo.
 
 ## Uso
 
-No `.pre-commit-config.yaml` do app, a partir do `templates/app/.pre-commit-config.yaml` do
-app-catalog:
+**Repo de app da `assembleiarr`:** no `.pre-commit-config.yaml` do app, a partir do
+`templates/app/.pre-commit-config.yaml` do app-catalog:
 
 ```yaml
 repos:
   - repo: https://github.com/assembleiarr/ci-workflows
     rev: v0.1.0
+    hooks:
+      - id: sem-env
+      # Só se o repo tem scripts shell:
+      - id: check-exec-bit
+      - id: check-shdoc
+```
+
+**Repo do `al-rr`:** no `.pre-commit-config.yaml` do repo, a partir do modelo do
+`al-rr/provision-template` (o modelo entra pela al-rr/provision-template#10). O `al-rr` adota a partir da `v0.2.0`, a primeira tag com a correção de
+caminho com espaço no `check-exec-bit`. O repo que liga o `check-exec-bit` apaga a sua cópia de
+`scripts/ci/check_exec_bit.sh` no mesmo PR.
+
+```yaml
+repos:
+  - repo: https://github.com/assembleiarr/ci-workflows
+    rev: v0.2.0
     hooks:
       - id: sem-env
       # Só se o repo tem scripts shell:
@@ -56,8 +82,9 @@ git update-index --chmod=-x scripts/lib.sh         # biblioteca
 
 ## Versões
 
-Os apps apontam para uma tag `vX.Y.Z`. As regras de versão e de publicação de tag estão no
-[`AGENTS.md`](AGENTS.md#versões).
+Quem usa aponta para uma tag `vX.Y.Z`, nunca para uma branch. As regras de versão e de publicação
+de tag estão no [`AGENTS.md`](AGENTS.md#versões); do lado do `al-rr`, a seção "Pinning" do
+`pre-commit-standard.md` do platform-catalog diz o mesmo.
 
 ## Desenvolvimento
 
