@@ -14,9 +14,10 @@ O repo é público: o pre-commit e o CI dos apps clonam ele sem credencial. Por 
 ter segredo, configuração de ambiente, nome de servidor ou dado interno.
 
 - `.pre-commit-hooks.yaml`: os hooks publicados (`sem-env`, `check-exec-bit`, `check-shdoc`).
-- `scripts/check_exec_bit.sh`: cópia do `al-rr/platform-modules`, com a origem e as mudanças no
-  cabeçalho. Correção vai primeiro para o `platform-modules` e depois é copiada para cá. Mantenha a
-  indentação com tab da origem.
+- `scripts/check_exec_bit.sh`: origem do `check-exec-bit`; nasceu como cópia do
+  `al-rr/platform-modules`, e o cabeçalho diz o que mudou desde então. Correção entra aqui
+  primeiro; as cópias temporárias nos repos do `al-rr` recebem a mesma correção em PR próprio.
+  Mantenha a indentação com tab.
 - `scripts/check_shdoc.sh`: verificador do cabeçalho shdoc, deste repo.
 - `tests/test_hooks.sh`: testa os hooks em repos git descartáveis.
 
