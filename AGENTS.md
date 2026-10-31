@@ -1,17 +1,23 @@
 # AGENTS.md
 
 Regras para agentes (Claude Code, Codex etc.) que trabalham no `assembleiarr/ci-workflows`.
-Os padrões completos ficam no [`assembleiarr/app-catalog`](https://github.com/assembleiarr/app-catalog).
-Este arquivo traz o que você precisa para trabalhar aqui sem consultar o catálogo.
+Os padrões completos ficam no [`assembleiarr/app-catalog`](https://github.com/assembleiarr/app-catalog)
+(apps) e no [`ednillibanio/platform-catalog`](https://github.com/ednillibanio/platform-catalog)
+(infra do `al-rr`). Este arquivo traz o que você precisa para trabalhar aqui sem consultar os
+catálogos.
 
 ## O repo
 
-Hooks compartilhados do pre-commit para as verificações de repositório dos apps da org
-`assembleiarr` (`docs/padroes/ci-devsecops.md` do app-catalog). Depois recebe os workflows
-reutilizáveis do CI.
+Hooks compartilhados do pre-commit para as verificações de repositório dos repos das orgs
+`assembleiarr` e `al-rr`. A fonte normativa de cada org diz quais hooks liga e como o CI os roda:
+`docs/padroes/ci-devsecops.md` do app-catalog e `docs/standards/pre-commit-standard.md` do
+platform-catalog. O contrato de cada hook fica no `README.md` deste repo, e os catálogos apontam
+para ele sem repetir regra. Depois o repo recebe os workflows reutilizáveis do CI.
 
-O repo é público: o pre-commit e o CI dos apps clonam ele sem credencial. Por isso nada aqui pode
-ter segredo, configuração de ambiente, nome de servidor ou dado interno.
+**Nada interno.** O repo é público: o pre-commit e o CI das duas orgs clonam ele sem credencial.
+Por isso nada aqui pode ter segredo, configuração de ambiente, nome de servidor, endereço, caminho
+interno ou outro dado interno. Verificação que precise disso fica como hook `repo: local` no repo
+que a usa.
 
 - `.pre-commit-hooks.yaml`: os hooks publicados (`sem-env`, `check-exec-bit`, `check-shdoc`).
 - `scripts/check_exec_bit.sh`: origem do `check-exec-bit`; nasceu como cópia do
@@ -49,16 +55,19 @@ Nomes como aparecem em `gh pr checks`.
 
 ## Versões
 
-Os repos de app apontam para uma tag (`rev: vX.Y.Z` no `.pre-commit-config.yaml`). Tags seguem
-SemVer:
+Os repos que usam os hooks apontam para uma tag (`rev: vX.Y.Z` no `.pre-commit-config.yaml`),
+nunca para uma branch. É a mesma regra da seção "Pinning" do `pre-commit-standard.md` do
+platform-catalog. Tags seguem SemVer:
 
 - **patch**: correção que não muda o que um hook aceita ou barra;
 - **minor**: hook novo, ou hook que passa a barrar algo novo;
 - **major**: hook removido ou renomeado, ou mudança que quebra a config de quem usa.
 
 Uma tag publicada nunca é movida nem apagada. Tag nova só com pedido explícito, depois do merge e
-com o CI verde na `main`. Ao subir a tag usada pelos apps, atualize também o
-`templates/app/.pre-commit-config.yaml` do app-catalog.
+com o CI verde na `main`. Ao subir a tag usada pelos repos, atualize também os modelos, cada um
+num PR do seu repo: o `templates/app/.pre-commit-config.yaml` do app-catalog e o
+`.pre-commit-config.yaml` do `al-rr/provision-template` (quando existir; entra pela
+al-rr/provision-template#10).
 
 ## Fluxo de trabalho
 
