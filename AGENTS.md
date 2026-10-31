@@ -64,7 +64,7 @@ com o CI verde na `main`. Ao subir a tag usada pelos apps, atualize também o
 Branch de integração: `main`. O repo nasceu dentro dos padrões, sem fase `lab`.
 
 1. **Issue** para todo trabalho:
-   `gh issue create -R assembleiarr/ci-workflows --title "<resultado esperado>" --body "<contexto, o que fazer, critério de pronto>" --label <bug|enhancement|padrao|security>`
+   `gh issue create -R assembleiarr/ci-workflows --title "<resultado esperado>" --body "<contexto, o que fazer, critério de pronto>" --label <bug|enhancement|standard|security>`
 2. **Branch** a partir da `main`:
    `git fetch origin && git switch -c <tipo>/<numero-da-issue>-<assunto> origin/main`.
    Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `build`, `chore`.
