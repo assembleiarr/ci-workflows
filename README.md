@@ -12,15 +12,13 @@ em `docs/padroes/ci-devsecops.md` e `docs/padroes/scripts-shell.md`.
 | `check-exec-bit` | Entrypoint shell sem `100755` ou sem shebang; biblioteca carregada com `source` com `100755` | O repo inteiro, a cada execução |
 | `check-shdoc` | Entrypoint shell (`100755`) sem `@file`, `@brief`, `@description` ou `@example` no cabeçalho shdoc | Scripts shell do commit |
 
-O `check-exec-bit` é cópia do `scripts/ci/check_exec_bit.sh` do `al-rr/platform-modules`; o
-cabeçalho do script diz o commit de origem e o que mudou. Ele trata como biblioteca o arquivo
-chamado `vars.sh`, `functions.sh` ou `lib.sh`, o que fica num diretório `lib/` e o que só define
-funções. Exceção temporária fica no repo verificado, em `scripts/ci/exec_bit_exceptions.txt`: um
-caminho por linha seguido do motivo.
-
-Limitação conhecida: o `check-exec-bit` ignora, sem aviso, script com espaço no caminho. A correção
-vai primeiro para a origem (al-rr/platform-modules#293) e depois é copiada para cá. Até lá, não use
-espaço em nome de script.
+Este repo é a origem do `check-exec-bit`. Ele nasceu como cópia do `scripts/ci/check_exec_bit.sh`
+do `al-rr/platform-modules`; as cópias que ainda existem nos repos do `al-rr` são temporárias e
+saem quando cada repo adota o hook. O hook trata como biblioteca o arquivo chamado `vars.sh`,
+`functions.sh` ou `lib.sh`, o que fica num diretório `lib/` e o que só define funções. Caminho com
+espaço também é verificado. Exceção temporária fica no repo verificado, em
+`scripts/ci/exec_bit_exceptions.txt`: um caminho por linha seguido do motivo. Um caminho com
+espaço não entra nessa lista; renomeie o arquivo.
 
 ## Uso
 

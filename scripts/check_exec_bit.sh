@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
-# Cópia de al-rr/platform-modules scripts/ci/check_exec_bit.sh, versão do commit f688c4f
-# (lab em ea97fb8). Correção vai primeiro para o platform-modules e depois é copiada.
-# Mudanças em relação à origem, todas para rodar como hook do pre-commit, que executa o script
-# a partir do cache do hook e não de dentro do repo verificado:
-# - REPO_ROOT vem de `git rev-parse --show-toplevel`, não do caminho do script;
+# Origem do check-exec-bit (ednillibanio/platform-catalog#68, decisão D2). Nasceu como cópia de
+# al-rr/platform-modules scripts/ci/check_exec_bit.sh (commit f688c4f); as cópias que ainda existem
+# nos repos do al-rr são temporárias e saem quando cada repo adota este hook. Correção entra aqui
+# primeiro.
+# Diferenças em relação àquela cópia:
+# - REPO_ROOT vem de `git rev-parse --show-toplevel`, não do caminho do script, porque o
+#   pre-commit executa o script a partir do cache do hook;
 # - EXCEPTIONS_FILE fica no repo verificado: scripts/ci/exec_bit_exceptions.txt;
-# - caminhos de uso e exemplo trocados para scripts/check_exec_bit.sh, e a referência ao
-#   bash-script-standard.md passa a citar o repo de origem.
-# Limitação herdada da origem: caminho com espaço é ignorado (al-rr/platform-modules#293).
+# - caminhos de uso e exemplo trocados para scripts/check_exec_bit.sh;
+# - a lista de arquivos vem de `git ls-files -s -z`, separando modo e caminho pelo tab, e por
+#   isso caminho com espaço também é verificado (al-rr/platform-modules#293).
 
 # @file check_exec_bit.sh
 # @brief Fail when a shell script's git-tracked executable bit is wrong.
@@ -35,6 +37,8 @@
 #
 #   Paths listed in scripts/ci/exec_bit_exceptions.txt (one per line,
 #   followed by a reason) are skipped; keep that list short and justified.
+#   The list splits on whitespace, so a path with a space cannot be listed:
+#   rename the file instead.
 #
 # @flag --help,-h Show usage information.
 #
@@ -110,8 +114,13 @@ main() {
 	esac
 
 	cd "${REPO_ROOT}"
-	local mode path kind failures=0 checked=0
-	while read -r mode path; do
+	local entry mode path kind failures=0 checked=0
+	# Each NUL-terminated entry is "<mode> <object> <stage>\t<path>": the path
+	# starts after the first tab and may contain spaces.
+	while IFS= read -r -d '' entry; do
+		mode="${entry%% *}"
+		path="${entry#*$'\t'}"
+		[[ "${mode}" == 100755 || "${mode}" == 100644 ]] || continue
 		if [[ "${path}" != *.sh ]]; then
 			# Extensionless files only (no "." in the name): skips .envrc,
 			# *.example templates and other non-script files.
@@ -131,7 +140,7 @@ main() {
 			log_error "${path}: entrypoint has no shebang"
 			failures=$((failures + 1))
 		fi
-	done < <(git ls-files -s | awk '$1 ~ /^100(755|644)$/ {print $1, $4}')
+	done < <(git ls-files -s -z)
 
 	if ((failures > 0)); then
 		log_error "${failures} of ${checked} shell file(s) have the wrong executable bit."

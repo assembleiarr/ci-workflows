@@ -136,6 +136,20 @@ add_file "${r}" docker/run.sh 644 "${SHDOC_OK}"
 add_file "${r}" scripts/ci/exec_bit_exceptions.txt 644 'docker/run.sh motivo do teste'
 expect exec-excecao pass check-exec-bit "${r}"
 
+r="$(new_repo exec-espaco-sem-bit)"
+add_file "${r}" "docker/my run.sh" 644 "${SHDOC_OK}"
+expect exec-espaco-sem-bit fail check-exec-bit "${r}"
+
+r="$(new_repo exec-espaco-com-bit)"
+add_file "${r}" "docker/my run.sh" 755 "${SHDOC_OK}"
+expect exec-espaco-com-bit pass check-exec-bit "${r}"
+
+r="$(new_repo exec-espaco-lib-755)"
+add_file "${r}" "scripts/lib/my util.sh" 755 'f() {
+  echo f
+}'
+expect exec-espaco-lib-755 fail check-exec-bit "${r}"
+
 r="$(new_repo exec-sem-shell)"
 add_file "${r}" README.md 644 '# app'
 expect exec-sem-shell pass check-exec-bit "${r}"
