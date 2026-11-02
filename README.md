@@ -38,7 +38,7 @@ espaço não entra nessa lista; renomeie o arquivo.
 ```yaml
 repos:
   - repo: https://github.com/assembleiarr/ci-workflows
-    rev: v0.1.0
+    rev: v0.2.0
     hooks:
       - id: sem-env
       # Só se o repo tem scripts shell:
