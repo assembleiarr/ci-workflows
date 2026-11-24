@@ -34,7 +34,8 @@ jobs:
       # cache miss. Um PR restaura o cache da branch base e nunca envia. Sem Go e Node no PATH,
       # como no runner self-hosted, o pre-commit baixa um Go para cada hook golang e um Node para
       # cada hook node, e o cache comprimido chega a uns 270 MB. Restauração cortada pelo limite
-      # vale como cache miss: o pre-commit instala os ambientes e o envio fica para o próximo push.
+      # vale como cache miss: o pre-commit instala os ambientes, e o push grava o cache se a
+      # restauração já tinha devolvido a chave; se não tinha, o envio fica para o próximo push.
       - name: Restaura o cache do pre-commit
         id: cache-pre-commit
         timeout-minutes: 3
