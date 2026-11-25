@@ -17,8 +17,10 @@ concurrency:
 
 jobs:
   # A mesma config do hook local, em todos os arquivos do repo.
+  # Limites: restauração 3 min, hooks 10, envio do cache 5, e margem para checkout e
+  # instalação. Um passo travado no cache não leva o job ao timeout.
   higiene:
-    timeout-minutes: 15
+    timeout-minutes: 20
     runs-on: ${{ vars.CI_RUNS_ON || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
@@ -26,12 +28,38 @@ jobs:
         with: {python-version: '3.13'}
       - name: Instala o pre-commit
         run: python -m pip install --disable-pip-version-check pre-commit==4.7.0
-      - uses: actions/cache@v4
+      # O runner entra na chave: um cache gravado no ubuntu-latest não restaura no runner
+      # self-hosted, que tem outro caminho de workspace, e impediria o runner de gravar o dele.
+      # Todo run restaura; só o push grava (o `on.push` só tem a branch de integração), e só em
+      # cache miss. Um PR restaura o cache da branch base e nunca envia. Sem Go e Node no PATH,
+      # como no runner self-hosted, o pre-commit baixa um Go para cada hook golang e um Node para
+      # cada hook node, e o cache comprimido chega a uns 270 MB. Restauração cortada pelo limite
+      # vale como cache miss: o pre-commit instala os ambientes, e o push grava o cache se a
+      # restauração já tinha devolvido a chave; se não tinha, o envio fica para o próximo push.
+      - name: Restaura o cache do pre-commit
+        id: cache-pre-commit
+        timeout-minutes: 3
+        continue-on-error: true
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: pre-commit-${{ vars.CI_RUNS_ON || 'ubuntu-latest' }}-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: pre-commit run --all-files
+        timeout-minutes: 10
         run: pre-commit run --all-files --show-diff-on-failure
+      # O envio já travou no runner self-hosted até o timeout do job. O cache só acelera o job:
+      # se o envio passar do limite, o step é cancelado e o job segue verde, sem cache.
+      - name: Grava o cache do pre-commit
+        if: >-
+          github.event_name == 'push'
+          && steps.cache-pre-commit.outputs.cache-primary-key != ''
+          && steps.cache-pre-commit.outputs.cache-hit != 'true'
+        timeout-minutes: 5
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ steps.cache-pre-commit.outputs.cache-primary-key }}
 
   # Histórico inteiro; o hook só olha o commit. CLI do gitleaks direto, como no security.yml do
   # al-rr/platform-modules (a gitleaks-action pede licença paga em repo de org).
